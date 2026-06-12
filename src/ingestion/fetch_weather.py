@@ -7,9 +7,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 
-# ----------------------------
+
 # Setup
-# ----------------------------
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("weather-pipeline")
 
@@ -19,17 +19,13 @@ API_KEY = os.getenv("OPENWEATHER_API_KEY")
 BASE_DIR = Path(__file__).resolve().parent
 CITIES_PATH = BASE_DIR / "cities.json"
 
-
-# ----------------------------
 # Helpers
-# ----------------------------
+
 def utc_now():
     return datetime.now(timezone.utc).isoformat()
 
-
-# ----------------------------
 # Core API calls
-# ----------------------------
+
 async def fetch_current_weather(client, city: str):
     url = "http://api.openweathermap.org/data/2.5/weather"
     params = {"q": city, "appid": API_KEY, "units": "metric"}
@@ -68,10 +64,7 @@ async def fetch_air_quality(client, lat: float, lon: float):
         logger.warning(f"[AQI FAIL] lat={lat}, lon={lon}: {e}")
         return None
 
-
-# ----------------------------
 # Forecast alignment logic
-# ----------------------------
 def extract_next_forecast(forecast_json):
     """
     Picks the nearest future forecast entry (not blindly list[0]).
@@ -95,10 +88,7 @@ def extract_next_forecast(forecast_json):
 
     return None
 
-
-# ----------------------------
 # City pipeline
-# ----------------------------
 async def fetch_city_weather(client, city: str):
     current = await fetch_current_weather(client, city)
     if not current:
@@ -144,10 +134,7 @@ async def fetch_city_weather(client, city: str):
         "air_quality": aqi_clean
     }
 
-
-# ----------------------------
 # Batch runner
-# ----------------------------
 async def fetch_all_weather():
     if not CITIES_PATH.exists():
         logger.error("cities.json not found")
@@ -162,9 +149,8 @@ async def fetch_all_weather():
     return [r for r in results if r is not None]
 
 
-# ----------------------------
 # CLI test
-# ----------------------------
+
 if __name__ == "__main__":
     data = asyncio.run(fetch_all_weather())
     print(f"Fetched {len(data)} cities")
