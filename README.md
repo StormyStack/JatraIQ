@@ -6,7 +6,8 @@
   </p>
   <br />
   
-  [![Live Deployment](https://img.shields.io/badge/Production-Live-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://jatra-iq.lovable.app)
+  [![Live App](https://img.shields.io/badge/Live-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://jatra-iq.lovable.app)
+  [![Google Sheets](https://img.shields.io/badge/Google_Sheets-109D59?style=for-the-badge&logo=googlesheets&logoColor=white)](https://docs.google.com/spreadsheets/d/1hwFGmLEbdN9G18Bwxb68edBSzJVwc3HRmfOlug9bFLI/edit?usp=sharing)
   [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
   [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
   [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -15,16 +16,17 @@
 
 <br />
 
-> **Production Frontend:** [jatra-iq.lovable.app](https://jatra-iq.lovable.app)  
-> **API Documentation (Swagger UI):** [jatraiq-api.up.railway.app/docs](https://jatraiq-api.up.railway.app/docs) *(Note: Replace with your actual Railway domain)*
+> **🚀 Live:** [jatra-iq.lovable.app](https://jatra-iq.lovable.app)  
+> **📊 Google Sheet:** [View Real-Time Data](https://docs.google.com/spreadsheets/d/1hwFGmLEbdN9G18Bwxb68edBSzJVwc3HRmfOlug9bFLI/edit?usp=sharing)  
+> **⚙️ API Docs:** [jatraiq-api.up.railway.app/docs](https://jatraiq-api.up.railway.app/docs)
 
 ---
 
 ## 📌 Executive Summary
 
-**JatraIQ** is a full-stack, cloud-native data engineering platform designed to solve the complexity of travel planning in the Bengal delta. By continuously ingesting, normalizing, and analyzing highly volatile meteorological data and severe PM2.5 air quality fluctuations, JatraIQ provides actionable intelligence to end-users through a seamless React-based interface. 
+**JatraIQ** is a full-stack, cloud-native data engineering platform built to solve the complexity of travel planning in highly volatile meteorological regions like the Bengal delta. By continuously ingesting, normalizing, and analyzing severe weather and PM2.5 air quality fluctuations, JatraIQ provides actionable intelligence to end-users through a seamless React-based interface and real-time spreadsheet syndication.
 
-The system operates entirely autonomously, utilizing background schedulers to perform Extract, Transform, Load (ETL) operations, and calculates a proprietary **Travel Readiness Score** to grade the safety and comfort of major cities.
+The system operates entirely autonomously using containerized background schedulers to perform Extract, Transform, Load (ETL) operations, and calculates a proprietary **Travel Readiness Score** to grade the safety and comfort of major cities.
 
 ---
 
@@ -38,42 +40,45 @@ graph LR
     API[OpenWeatherMap]
 
     %% Core Backend Pipeline
-    subgraph Backend [FastAPI Data Pipeline]
-    Ingest[Async Ingestion] --> Clean[Pandas Processing]
-    Clean --> Score[Feature Engineering]
-    Score --> DB[(NeonDB PostgreSQL)]
+    subgraph Backend [FastAPI ETL Pipeline]
+    Ingest[Async API Ingestion] --> Clean[Pandas Normalization]
+    Clean --> Score[Feature Engineering & ML Readiness]
+    Score --> DB[(NeonDB Serverless PostgreSQL)]
+    Score --> GS[(Google Sheets Analytics)]
     DB --> REST[REST API Endpoints]
     end
 
-    %% Frontend
-    UI[React / Vite Frontend]
+    %% Frontend & External
+    UI[React / Vite Interface]
+    Stakeholders[Data Analysts / Stakeholders]
 
     %% Connections
-    Cron((APScheduler)) -.->|Triggers Hourly| Ingest
+    Cron((APScheduler)) -.->|Triggers Every 4 Hours| Ingest
     API -->|Raw JSON| Ingest
     REST -->|JSON Payload| UI
+    GS -->|Live View| Stakeholders
 ```
 
 ---
 
 ## 💻 Core Technical Achievements
 
-### 1. Automated ETL & Data Engineering
-- Designed an **Asynchronous Ingestion Engine** using `httpx` and `asyncio` to concurrently fetch current weather, 5-day forecasts, and precise latitude/longitude-based Air Pollution metrics without blocking the primary thread.
-- Implemented a **Pandas-driven Processing Layer** (`clean_data.py`) to flatten deeply nested JSON payloads, map features, apply boundary validation rules (e.g., dropping anomalous temperatures), and parse ISO timestamps into ML-ready formats.
-- Integrated **APScheduler** directly into the FastAPI event loop, ensuring the database is populated with rich, historical time-series data every hour with zero manual intervention.
+### 1. Robust Data Engineering & Google Sheets Sync
+- **GCP Service Account Integration:** Engineered an automated syndication pipeline using `gspread` and `google-auth` to push clean Pandas DataFrames directly into a [Live Google Spreadsheet](https://docs.google.com/spreadsheets/d/1hwFGmLEbdN9G18Bwxb68edBSzJVwc3HRmfOlug9bFLI/edit?usp=sharing) every 4 hours. Includes dynamic header generation, frozen rows, and custom UI formatting via the API.
+- **Asynchronous Ingestion Engine:** Designed a high-throughput fetcher using `httpx` and `asyncio` to concurrently ingest weather, 5-day forecasts, and exact Air Pollution metrics without blocking the primary thread.
+- **Pandas-driven Processing Layer:** Flattens deeply nested API payloads, enforces boundary validation rules, and parses ISO timestamps into analytics-ready formats.
 
 ### 2. Custom Feature Engineering (Scoring Algorithm)
-The platform evaluates raw data against optimal human-comfort baselines to generate a unified `overall_score` (0-100) and assigns a categorical risk level (`Excellent`, `Good`, `Moderate`, `Risky`). The algorithm calculates:
+The platform evaluates raw data against optimal human-comfort baselines to generate a unified `overall_score` (0-100) and assigns a categorical risk level (`Excellent`, `Good`, `Moderate`, `Risky`). The algorithm weighs:
 - **Temperature Deviation**: Absolute variance from an optimal 22°C baseline.
 - **Humidity Penalty**: Weighted deduction for uncomfortable tropical humidity levels.
 - **Precipitation Risk**: Inverted probability scale targeting 0% rain.
-- **Air Quality Index (AQI)**: Heavy penalization for PM2.5 threshold breaches, utilizing European 1-5 indices.
+- **Air Quality Index (AQI)**: Heavy penalization for PM2.5 threshold breaches utilizing European standards.
 
-### 3. Cloud-Native Infrastructure & Deployment
-- **Database**: Engineered highly normalized relational schemas using **SQLAlchemy** connected to a serverless **NeonDB** instance via connection pooling.
-- **Containerization**: Packaged the API using an optimized, multi-stage `python:3.11-slim` **Dockerfile**, minimizing the attack surface and image footprint.
-- **CI/CD Configuration**: Deployed the Dockerized backend natively to **Railway**, utilizing `.dockerignore` and dynamic port binding (`$PORT`) for seamless continuous deployment.
+### 3. Cloud-Native Infrastructure & CI/CD
+- **Serverless Relational Data**: Engineered highly normalized relational schemas using **SQLAlchemy** connected to a serverless **NeonDB** instance via connection pooling.
+- **Containerization**: Packaged the Python application using an optimized, multi-stage `python:3.11-slim` **Dockerfile**, minimizing the attack surface and deployment footprint.
+- **Continuous Deployment**: Deployed natively to **Railway** via GitHub Actions, injecting runtime secrets (like the Google credentials JSON) dynamically to ensure zero sensitive data is committed to version control.
 
 ---
 
@@ -84,7 +89,7 @@ The platform evaluates raw data against optimal human-comfort baselines to gener
 - Node.js & Bun
 - PostgreSQL (or an active NeonDB connection string)
 
-### Backend (FastAPI)
+### Backend (FastAPI & Pipeline)
 ```bash
 # 1. Initialize Virtual Environment
 python -m venv venv
@@ -96,6 +101,8 @@ pip install -r requirements.txt
 # 3. Configure Secrets (.env)
 # OPENWEATHER_API_KEY=your_openweather_key
 # DATABASE_URL=postgresql://user:password@ep-neondb-url...
+# GOOGLE_CREDENTIALS_JSON='{...}'
+# GOOGLE_SHEET_ID=your_sheet_id
 
 # 4. Boot the Server (http://localhost:8000)
 uvicorn main:app --reload
@@ -113,10 +120,7 @@ bun install
 bun run dev
 ```
 
----
 
-## 🔮 Machine Learning Readiness (Phase 8 Roadmap)
-By maintaining a strict separation between raw `weather_readings` and derived `travel_readiness` tables, the NeonDB database is primed for predictive modeling. Future iterations will utilize this historical corpus to train time-series forecasting models (e.g., ARIMA, Prophet, or LSTMs) to predict travel readiness weeks in advance.
 
 <br />
 <div align="center">
