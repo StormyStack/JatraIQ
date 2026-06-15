@@ -5,4 +5,4 @@ __pycache__/
 .vscode/
 venv/
 env/
-c:/Users/Sudipto/.gemini/
+google_credentials.json

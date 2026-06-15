@@ -6,6 +6,7 @@ from src.features.scores import calculate_readiness_score
 from src.db.init_db import init_db
 from src.db.database import SessionLocal
 from src.db.repository import save_weather_readings, save_readiness_scores
+from src.integrations.google_sheets import update_google_sheet
 
 if sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -26,6 +27,13 @@ async def main():
         finally:
             db.close()
         
+        print("Syncing data to Google Sheets...")
+        success = update_google_sheet(featured_df)
+        if success:
+            print("Successfully synced data to Google Sheets.")
+        else:
+            print("Google Sheets sync completed with failure/skip.")
+
         print(featured_df[['city', 'temp', 'humidity', 'rain_probability', 'aqi_score', 'overall_score', 'category']].head())
     else:
         print("Pipeline failed at ingestion.")

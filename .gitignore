@@ -39,3 +39,6 @@ __pycache__/
 venv/
 env/
 .pytest_cache/
+
+# Credentials
+google_credentials.json
