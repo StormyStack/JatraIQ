@@ -44,7 +44,10 @@ async def run_automated_pipeline():
     except Exception as e:
         logger.error(f"Error updating Google Sheets: {e}")
 
+scheduler = None
+
 def start_scheduler():
+    global scheduler
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         run_automated_pipeline,
